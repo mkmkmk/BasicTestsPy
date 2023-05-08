@@ -157,6 +157,20 @@ print_args("ala", "ma", "kota")
         
 #%%
 
+# (słówko pass oznacza że zawartość jest pusta)
+class Small:
+    pass
+
+# powołujemy obiekt klasy (instancję klasy)
+s = Small()
+
+# dopisujemy pola mimo że nie było ich w definicji klasy, widać tak można w Pythonie
+s.ala = 'ala'
+s.ma = 'ma'
+s.kota = 'kota'
+
+print(s.ala, s.ma, s.kota)
+
 
 #%%
 
