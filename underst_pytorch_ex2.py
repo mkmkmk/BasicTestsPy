@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
 import torch.nn as nn
-#from torchviz import make_dot
+# from torchviz import make_dot
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -30,7 +30,6 @@ val_idx = idx[80:]
 # Generates train and validation sets
 x_train, y_train = x[train_idx], y[train_idx]
 x_val, y_val = x[val_idx], y[val_idx]
-
 
 plt.plot(x_val, y_val, 'r.')
 plt.plot(x_train, y_train, 'b.')
@@ -83,22 +82,54 @@ n_epochs = 1000
 
 for epoch in range(n_epochs):
     # Computes our model's predicted output
-    yhat = a + b * x_train
+    yhat = a + b * x_train_tensor
     
     # How wrong is our model? That's the error! 
-    error = (y_train - yhat)
+    error = (y_train_tensor - yhat)
     # It is a regression, so it computes mean squared error (MSE)
     loss = (error ** 2).mean()
-    
-    # Computes gradients for both "a" and "b" parameters
-    a_grad = -2 * error.mean()
-    b_grad = -2 * (x_train * error).mean()
-    
+
+    # No more manual computation of gradients!
+    # # Computes gradients for both "a" and "b" parameters
+    # a_grad = -2 * error.mean()
+    # b_grad = -2 * (x_tensor * error).mean()
+
+    # We just tell PyTorch to work its way BACKWARDS from the specified loss!
+    loss.backward()
+
+    if False:
+        # Let's check the computed gradients...
+        print(a.grad)
+        print(b.grad)
+
+    # What about UPDATING the parameters? Not so fast...
     # Updates parameters using gradients and the learning rate
-    a = a - lr * a_grad
-    b = b - lr * b_grad
+
+    # FIRST ATTEMPT
+    if False:
+        a = a - lr * a.grad
+        b = b - lr * b.grad
+        a.grad.zero_()
+        # AttributeError: 'NoneType' object has no attribute 'zero_'
+
+    # SECOND ATTEMPT
+    if False:
+        a -= lr * a.grad
+        b -= lr * b.grad
+        # RuntimeError: a leaf Variable that requires grad has been used in an in-place operation.
+
+    # THIRD ATTEMPT
+    # We need to use NO_GRAD to keep the update out of the gradient computation
+    # Why is that? It boils down to the DYNAMIC GRAPH that PyTorch uses...
+    with torch.no_grad():
+        a -= lr * a.grad
+        b -= lr * b.grad
+
+    # PyTorch is "clingy" to its computed gradients, we need to tell it to let it go...
+    a.grad.zero_()
+    b.grad.zero_()
         
 print(a, b)
-plt.show()
 
 print("done")
+
