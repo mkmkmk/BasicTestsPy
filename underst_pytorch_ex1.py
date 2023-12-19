@@ -24,10 +24,11 @@ val_idx = idx[80:]
 x_train, y_train = x[train_idx], y[train_idx]
 x_val, y_val = x[val_idx], y[val_idx]
 
-
 plt.plot(x_val, y_val, 'r.')
 plt.plot(x_train, y_train, 'b.')
 if False:
+    # plt.draw()
+    # plt.show()
     plt.pause(0)
 
 
@@ -61,7 +62,7 @@ for epoch in range(n_epochs):
     b = b - lr * b_grad
         
 print(a, b)
-plt.show()
+
 
 # Sanity Check: do we get the same results as our gradient descent?
 from sklearn.linear_model import LinearRegression
