@@ -63,4 +63,11 @@ for epoch in range(n_epochs):
 print(a, b)
 plt.show()
 
+# Sanity Check: do we get the same results as our gradient descent?
+from sklearn.linear_model import LinearRegression
+linr = LinearRegression()
+linr.fit(x_train, y_train)
+print(linr.intercept_, linr.coef_[0])
+
+
 print("done")
