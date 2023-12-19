@@ -27,6 +27,8 @@ x_val, y_val = x[val_idx], y[val_idx]
 
 plt.plot(x_val, y_val, 'r.')
 plt.plot(x_train, y_train, 'b.')
+if False:
+    plt.pause(0)
 
 
 # Initializes parameters "a" and "b" randomly
