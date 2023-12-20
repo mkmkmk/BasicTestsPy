@@ -43,6 +43,7 @@ plt.plot(x_train, y_train, 'b.')
 if False:
     # plt.show()
     # _pylab_helpers.Gcf.get_active().canvas.start_event_loop(0)
+   
     plt.pause(0)
 
 # Our data was in Numpy arrays, but we need to transform them into PyTorch's Tensors
@@ -54,34 +55,12 @@ y_train_tensor = torch.from_numpy(y_train).float().to(device)
 # since it also tells us WHERE the tensor is (device)
 print(type(x_train), type(x_train_tensor), x_train_tensor.type())
 
-# FIRST
-# Initializes parameters "a" and "b" randomly, ALMOST as we did in Numpy
-# since we want to apply gradient descent on these parameters, we need
-# to set REQUIRES_GRAD = TRUE
-a = torch.randn(1, requires_grad=True, dtype=torch.float)
-b = torch.randn(1, requires_grad=True, dtype=torch.float)
-print(a, b)
-
-# SECOND
-# But what if we want to run it on a GPU? We could just send them to device, right?
-a = torch.randn(1, requires_grad=True, dtype=torch.float).to(device)
-b = torch.randn(1, requires_grad=True, dtype=torch.float).to(device)
-print(a, b)
-# Sorry, but NO! The to(device) "shadows" the gradient...
-
-# THIRD
-# We can either create regular tensors and send them to the device (as we did with our data)
-a = torch.randn(1, dtype=torch.float).to(device)
-b = torch.randn(1, dtype=torch.float).to(device)
-# and THEN set them as requiring gradients...
-a.requires_grad_()
-b.requires_grad_()
-print(a, b)
 
 # We can specify the device at the moment of creation - RECOMMENDED!
 torch.manual_seed(42)
 a = torch.randn(1, requires_grad=True, dtype=torch.float, device=device)
 b = torch.randn(1, requires_grad=True, dtype=torch.float, device=device)
+print("BEFORE: a,b")
 print(a, b)
 
 # Sets learning rate
@@ -89,22 +68,33 @@ lr = 1e-1
 # Defines number of epochs
 n_epochs = 1000
 
+# Defines a MSE loss function
+loss_fn = nn.MSELoss(reduction='mean')
+
+# Defines a SGD optimizer to update the parameters
+optimizer = optim.SGD([a, b], lr=lr)
+
+
 for epoch in range(n_epochs):
+    
     # Computes our model's predicted output
     yhat = a + b * x_train_tensor
     
-    # How wrong is our model? That's the error! 
-    error = (y_train_tensor - yhat)
-    # It is a regression, so it computes mean squared error (MSE)
-    loss = (error ** 2).mean()
-
     if False:
-        print("now dot...")
-        os.getcwd()
-        make_dot(yhat).render("torch_graph_yhat", format="png")
-        make_dot(error).render("torch_graph_error", format="png")
-        make_dot(loss).render("torch_graph_loss", format="png")
-        break
+        # How wrong is our model? That's the error! 
+        error = (y_train_tensor - yhat)
+        # It is a regression, so it computes mean squared error (MSE)
+        loss = (error ** 2).mean()
+        
+        if False:
+            print("now dot...")
+            os.getcwd()
+            make_dot(yhat).render("torch_graph_yhat", format="png")
+            make_dot(error).render("torch_graph_error", format="png")
+            make_dot(loss).render("torch_graph_loss", format="png")
+            break
+
+    loss = loss_fn(y_train_tensor, yhat)
 
     # No more manual computation of gradients!
     # # Computes gradients for both "a" and "b" parameters
@@ -119,33 +109,26 @@ for epoch in range(n_epochs):
         print(a.grad)
         print(b.grad)
 
-    # What about UPDATING the parameters? Not so fast...
-    # Updates parameters using gradients and the learning rate
-
-    # FIRST ATTEMPT
+    # No more telling PyTorch to let gradients go!
     if False:
-        a = a - lr * a.grad
-        b = b - lr * b.grad
+        # THIRD ATTEMPT
+        # We need to use NO_GRAD to keep the update out of the gradient computation
+        # Why is that? It boils down to the DYNAMIC GRAPH that PyTorch uses...
+        with torch.no_grad():
+            a -= lr * a.grad
+            b -= lr * b.grad
+        # PyTorch is "clingy" to its computed gradients, we need to tell it to let it go...
         a.grad.zero_()
-        # AttributeError: 'NoneType' object has no attribute 'zero_'
+        b.grad.zero_()
+    
+    
+    optimizer.step()
+    
+    optimizer.zero_grad()
 
-    # SECOND ATTEMPT
-    if False:
-        a -= lr * a.grad
-        b -= lr * b.grad
-        # RuntimeError: a leaf Variable that requires grad has been used in an in-place operation.
 
-    # THIRD ATTEMPT
-    # We need to use NO_GRAD to keep the update out of the gradient computation
-    # Why is that? It boils down to the DYNAMIC GRAPH that PyTorch uses...
-    with torch.no_grad():
-        a -= lr * a.grad
-        b -= lr * b.grad
 
-    # PyTorch is "clingy" to its computed gradients, we need to tell it to let it go...
-    a.grad.zero_()
-    b.grad.zero_()
-        
+print("AFTER: a,b")        
 print(a, b)
 
 print("done")
