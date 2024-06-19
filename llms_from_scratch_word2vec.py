@@ -4,7 +4,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-
+import torch
+import torch.nn.functional as F
 
 class word2vec:
     """ An implementation of the word2vec Skip-Gram algorithm.
@@ -43,6 +44,7 @@ class word2vec:
         self.embeddings = None
         self.encoded_training_data = None
         self.losses = []
+        self.losses_t = []
         self.training_data = None
         self.vec_to_word = None
         self.vocab = None
@@ -197,9 +199,13 @@ class word2vec:
         W_center = np.random.rand(self.vocab_size, EMBEDDING_DIM)
         W_outside = np.random.rand(EMBEDDING_DIM, self.vocab_size)
 
+        W_center_t = torch.tensor(W_center, requires_grad=True, dtype=torch.float)
+        W_outside_t = torch.tensor(W_outside, requires_grad=True, dtype=torch.float)
+
         for epoch_num in range(self.epochs):
 
             loss = 0
+            loss_t = 0
 
             for x, outside_words in self.encoded_training_data:
 
@@ -218,11 +224,32 @@ class word2vec:
                 W_outside = W_outside - (self.learning_rate * grad_W_outside)
                 W_center = W_center - (self.learning_rate * grad_W_center)
 
+                x_t = torch.tensor(x, dtype=torch.float)
+                h_t = torch.tensordot(x_t, W_center_t, dims = ([0], [0]))
+                u_t = torch.tensordot(h_t, W_outside_t, dims = ([0], [0]))
+                y_pred_t = F.softmax(u_t, dim = 0)
+
+                compon_t = y_pred_t * torch.tensor(np.sum(outside_words, axis=0), dtype=torch.float)
+                loss_in_t = -torch.sum(torch.log(torch.where(compon_t > 1e-20, compon_t, 1)))
+
+                loss_in_t.backward()
+
+                with torch.no_grad():
+                    W_outside_t = W_outside_t.detach() - (self.learning_rate * W_outside_t.grad)
+                    W_center_t = W_center_t.detach() - (self.learning_rate * W_center_t.grad)
+                    loss_t += loss_in_t.detach()
+
+                W_outside_t.requires_grad_(True)
+                W_center_t.requires_grad_(True)
+
             self.losses.append(loss)
-            print(f'Epoch: {epoch_num+1}    Loss: {loss}')
+            self.losses.append(loss_t)
+            print(f'Epoch: {epoch_num+1}    Loss: {loss}    Loss_t: {loss_t}')
 
         self.embeddings = W_center
 
+        print(W_center)
+        print(W_center_t.detach().numpy())
 
 EMBEDDING_DIM = 3
 WINDOW_SIZE = 2
