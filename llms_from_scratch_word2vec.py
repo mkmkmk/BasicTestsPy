@@ -247,9 +247,10 @@ class word2vec:
             print(f'Epoch: {epoch_num+1}    Loss: {loss}    Loss_t: {loss_t}')
 
         self.embeddings = W_center
+        self.embeddings_t = W_center_t.detach().numpy()
 
-        print(W_center)
-        print(W_center_t.detach().numpy())
+        print(self.embeddings)
+        print(self.embeddings_t)
 
 EMBEDDING_DIM = 3
 WINDOW_SIZE = 2
@@ -271,6 +272,13 @@ w2v = word2vec(embedding_dim = EMBEDDING_DIM,
 # Train the model
 w2v.train(training_data)
 
+# Plot the word embeddings
+fig = plt.figure(figsize=(10,10))
+ax = fig.add_subplot(projection='3d')
 
+for i, (x,y,z) in enumerate(w2v.embeddings):
+    ax.scatter(x,y,z)
+    ax.text(x+0.1, y+0.1, z, w2v.vocab[i], size=13)
 
+plt.pause(0)
 
