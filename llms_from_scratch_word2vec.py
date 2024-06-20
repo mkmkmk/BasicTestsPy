@@ -1,5 +1,7 @@
-# Word Embeddings with word2vec from Scratch in Python
-# https://medium.com/@bradneysmith/word-embeddings-with-word2vec-from-scratch-in-python-eb9326c6ab7c
+"""
+    Word Embeddings with word2vec from Scratch in Python
+    https://medium.com/@bradneysmith/word-embeddings-with-word2vec-from-scratch-in-python-eb9326c6ab7c
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np
