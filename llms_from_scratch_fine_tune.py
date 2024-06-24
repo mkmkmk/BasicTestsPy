@@ -13,10 +13,10 @@
 
 """
 # from pyglet.gl.wgl import PROC
-from numba.core.types import none
+# from numba.core.types import none
 
-FAST_DBG_TEST = False
 FAST_DBG_TEST = True
+FAST_DBG_TEST = False
 
 import os
 import gc
@@ -37,8 +37,9 @@ import torch.nn as nn
 from transformers import get_linear_schedule_with_warmup
 
 
-batch_size = 16
 batch_size = 8
+batch_size = 16
+batch_size = 12
 
 if False:
     os.environ['HTTPS_PROXY'] = 'http://192.168.44.1:8080'
@@ -139,7 +140,8 @@ for review in df['review_cleaned']:
     attention_masks.append(batch_encoder['attention_mask'])
     id = id + 1
     if id % (len(df) // 100) == 0:
-        print(f"progress {round(id*100/len(df), 1)}%")
+        proc = id * 100 / len(df)
+        print(f"progress {round(proc, 1)}%")
 
     if id > 512 and FAST_DBG_TEST:
         break
@@ -192,6 +194,7 @@ val_dataloader = DataLoader(val_data, batch_size = batch_size)
 # Check if GPU is available for faster training time
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
+    torch.cuda.empty_cache()
 else:
     device = torch.device('cpu')
 
@@ -239,6 +242,7 @@ if False:
     for item in model.parameters(True):
         print(item)
 
+train_accuracy = 0;
 
 for epoch in range(0, EPOCHS):
     
@@ -273,15 +277,21 @@ for epoch in range(0, EPOCHS):
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         scheduler.step()
-    
-        del batch_token_ids
-        del batch_attention_mask
-        del batch_labels
-        del loss
-        del logits
-        gc.collect()
+
         with torch.no_grad():
-            torch.cuda.empty_cache()
+            i_label_ids = batch_labels.to('cpu').numpy()
+            i_logits = logits.detach().cpu().numpy()
+            train_accuracy += calculate_accuracy(i_logits, i_label_ids)
+
+        if True:
+            del batch_token_ids
+            del batch_attention_mask
+            del batch_labels
+            del loss
+            del logits
+            gc.collect()
+            with torch.no_grad():
+                torch.cuda.empty_cache()
 
         if False:
             for obj in gc.get_objects():
@@ -291,24 +301,26 @@ for epoch in range(0, EPOCHS):
                 except:
                     pass
     
+
         id = id + 1
         if id % max(1, len(train_dataloader) // 100) == 0:
             proc = id * 100 / len(train_dataloader)
+            print("--")
             print(f"progress {round(proc, 1)}%")
-            print(f"training_loss {round(training_loss, 1)}")
-            print(f"GPU mem usage: {100 * torch.cuda.mem_get_info()[0] // torch.cuda.mem_get_info()[1]}%")
-
-        # if id > 2 and FAST_DBG_TEST:
-        #     break
-
-    average_train_loss = training_loss / len(train_dataloader)
+            print(f"training_loss {round(training_loss/id, 3)}")
+            print(f"train_accuracy = {round(train_accuracy / id, 3)} ")
+            print(f"GPU mem free: {100 * torch.cuda.mem_get_info()[0] // torch.cuda.mem_get_info()[1]}%")
 
 
     if FAST_DBG_TEST:
         break
 
+print("-- --")
+training_loss = training_loss / len(train_dataloader)
+print(f'training_loss = {round(training_loss, 3)}')
 
-print(f'average_train_loss:     {round(average_train_loss, 3)}')
+train_accuracy = train_accuracy / len(train_dataloader)
+print(f"train_accuracy = {round(train_accuracy, 3)} ")
 
 
 
@@ -338,12 +350,20 @@ for batch in val_dataloader:
     val_accuracy += calculate_accuracy(logits, label_ids)
 
 
-average_val_accuracy = val_accuracy / len(val_dataloader)
-print(f"average_val_accuracy = {round(average_val_accuracy, 3)} ")
+print("-- --")
 
+val_loss = val_loss /  len(val_dataloader)
+print(f'val_loss = {round(val_loss, 3)}')
+
+val_accuracy = val_accuracy / len(val_dataloader)
+print(f"val_accuracy = {round(val_accuracy, 3)} ")
     
 print("-- DONE --")
-    
 
+# batch_size = 12
+# progress 48.3%
+# training_loss 0.744
+# train_accuracy = 0.505
+# GPU mem free: 48%
     
     
