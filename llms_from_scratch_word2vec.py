@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 import torch
-import torch.nn.functional as F
+from torch.nn import Softmax
 
 class word2vec:
     """ An implementation of the word2vec Skip-Gram algorithm.
@@ -204,6 +204,8 @@ class word2vec:
         W_center_t = torch.tensor(W_center, requires_grad=True, dtype=torch.float)
         W_outside_t = torch.tensor(W_outside, requires_grad=True, dtype=torch.float)
 
+        softmax = Softmax()
+
         for epoch_num in range(self.epochs):
 
             loss = 0
@@ -229,7 +231,7 @@ class word2vec:
                 x_t = torch.tensor(x, dtype=torch.float)
                 h_t = torch.tensordot(x_t, W_center_t, dims = ([0], [0]))
                 u_t = torch.tensordot(h_t, W_outside_t, dims = ([0], [0]))
-                y_pred_t = F.softmax(u_t, dim = 0)
+                y_pred_t = softmax(u_t)
 
                 compon_t = y_pred_t * torch.tensor(np.sum(outside_words, axis=0), dtype=torch.float)
                 loss_in_t = -torch.sum(torch.log(torch.where(compon_t > 1e-20, compon_t, 1)))
