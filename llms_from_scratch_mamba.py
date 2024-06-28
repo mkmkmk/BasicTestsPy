@@ -19,20 +19,29 @@ from transformers import AutoModelForCausalLM , AutoTokenizer
 if False:
     os.environ['HTTPS_PROXY'] = 'http://192.168.44.1:8080'
 
-model = AutoModelForCausalLM.from_pretrained('Q-bert/Mamba-1B', trust_remote_code=True)
+if torch.cuda.is_available():
+    device = torch.device('cuda:0')
+    torch.cuda.empty_cache()
+else:
+    device = torch.device('cpu')
+print(f"device: {device}")
+
+model = AutoModelForCausalLM.from_pretrained('Q-bert/Mamba-1B', trust_remote_code=True).to(device)
 tokenizer = AutoTokenizer.from_pretrained('Q-bert/Mamba-1B')
 
 
+text = "Hi"
 text = "Hi, what do jou know about Wikipedia?"
 
-input_ids = tokenizer.encode(text, return_tensors="pt")
+input_ids = tokenizer.encode(text, return_tensors="pt").to(device)
+
 tokenizer.convert_ids_to_tokens(input_ids[0])
 
 # oryginalnie 20, 200 - b dłuuugo
-output = model.generate(input_ids, max_length=200, num_beams=5, no_repeat_ngram_size=2)
+output = model.generate(input_ids, max_length=100, num_beams=5, no_repeat_ngram_size=2)
 
 generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-generated_text
+print(generated_text)
 
 # 'Hi, what do jou know about Wikipedia?\n\n
 # Wikipedia is a free online encyclopedia that anyone can edit. 
