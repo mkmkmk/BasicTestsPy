@@ -41,9 +41,6 @@ batch_size = 8
 batch_size = 16
 batch_size = 12
 
-if False:
-    os.environ['HTTPS_PROXY'] = 'http://192.168.44.1:8080'
-
 os.getcwd()
 
 

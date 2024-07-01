@@ -17,9 +17,6 @@ import os
 import torch
 from transformers import AutoModel, AutoTokenizer
 
-if False:
-    os.environ['HTTPS_PROXY'] = 'http://192.168.44.1:8080'
-
 def extract_le(sequence, tokenizer, model):
     """ Extract the learned embedding for each token in an input sequence.
 

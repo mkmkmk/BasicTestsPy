@@ -16,8 +16,6 @@ import os
 import torch
 from transformers import AutoModelForCausalLM , AutoTokenizer
 
-if False:
-    os.environ['HTTPS_PROXY'] = 'http://192.168.44.1:8080'
 
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
