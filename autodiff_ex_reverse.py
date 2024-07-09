@@ -15,7 +15,7 @@ class Variable(Expression):
     def evaluate(self):
         pass
 
-    def derive(self, seed):
+    def derive(self, seed = 1):
         self.partial += seed
 
 class Plus(Expression):
@@ -29,7 +29,7 @@ class Plus(Expression):
         self.expressionB.evaluate()
         self.value = self.expressionA.value + self.expressionB.value
 
-    def derive(self, seed):
+    def derive(self, seed = 1):
         self.expressionA.derive(seed)
         self.expressionB.derive(seed)
 
@@ -44,7 +44,7 @@ class Multiply(Expression):
         self.expressionB.evaluate()
         self.value = self.expressionA.value * self.expressionB.value
 
-    def derive(self, seed):
+    def derive(self, seed = 1):
         self.expressionA.derive(self.expressionB.value * seed)
         self.expressionB.derive(self.expressionA.value * seed)
 
@@ -54,6 +54,51 @@ y = Variable(3)
 z = x * (x + y) + y * y
 z.evaluate()
 print("z =", z.value)        # Output: z = 19
-z.derive(1)
+z.derive()
 print("∂z/∂x =", x.partial)  # Output: ∂z/∂x = 7
 print("∂z/∂y =", y.partial)  # Output: ∂z/∂y = 8
+
+
+print("---")
+x = Variable(2)
+z = x*x*x
+z.evaluate()
+print("z =", z.value)
+z.derive()
+# 3x^2 = 3*4
+print("∂z/∂x =", x.partial)
+
+print("---")
+x = Variable(2)
+z = x*x*x*x
+z.evaluate()
+print("z =", z.value)
+z.derive(1)
+# 4x^3 = 4*8
+print("∂z/∂x =", x.partial)
+
+print("---")
+x = Variable(2)
+z = x*x*x*x*x
+z.evaluate()
+print("z =", z.value)
+z.derive()
+# 5x^4 = 5*16
+print("∂z/∂x =", x.partial)
+
+
+print("---")
+x = Variable(2)
+y = Variable(3)
+z = x*y
+z.evaluate()
+print("z =", z.value)
+z.derive()
+# 5x^4 = 5*16
+print("∂z/∂x =", x.partial)
+print("∂z/∂y =", y.partial)
+
+
+
+
+
