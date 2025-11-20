@@ -58,10 +58,7 @@ def calculate_accuracy(preds, labels):
         accuracy (float): The accuracy as a percentage of the correct
             predictions.
     """
-    pred_flat = np.argmax(preds, axis=1).flatten()
-    labels_flat = labels.flatten()
-    accuracy = np.sum(pred_flat == labels_flat) / len(labels_flat)
-
+    accuracy = (np.argmax(preds, axis=1) == labels).mean()
     return accuracy
 
 
@@ -372,6 +369,7 @@ for batch in val_dataloader:
     label_ids = batch_labels.to('cpu').numpy()
     val_loss += loss.item()
     val_accuracy += calculate_accuracy(logits, label_ids)
+    # val_accuracy += (np.argmax(logits, axis=1) == label_ids).mean()
 
 
 print("-- --")
@@ -416,5 +414,5 @@ print("-- DONE --")
 if False:
     model.save_pretrained("bert-imdb-poc")
     tokenizer.save_pretrained("bert-imdb-poc")
-    %pwd
+    # %pwd
 # %%
