@@ -267,9 +267,9 @@ if False:
 
 # %%
 
-for epoch in range(0, EPOCHS):
+for epoch in range(EPOCHS):
     
-    print(f"----- epoch: {epoch}")
+    print(f"\n\n----- epoch: {epoch}\n")
     model.train()
     total_training_loss = 0
     total_train_accuracy = 0
@@ -298,12 +298,12 @@ for epoch in range(0, EPOCHS):
         curr_training_loss = loss.item()
         total_training_loss += curr_training_loss
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         scheduler.step()
 
         with torch.no_grad():
-            i_label_ids = batch_labels.to('cpu').numpy()
+            i_label_ids = batch_labels.detach().to('cpu').numpy()
             i_logits = logits.detach().cpu().numpy()
             curr_train_accuracy = calculate_accuracy(i_logits, i_label_ids)
             total_train_accuracy += curr_train_accuracy
@@ -337,6 +337,7 @@ for epoch in range(0, EPOCHS):
             print(f"total_training_loss {total_training_loss / id:.3f}")
             print(f"total_train_accuracy = {total_train_accuracy / id:.3f} ")
             print(f"GPU mem free: {100 * torch.cuda.mem_get_info()[0] // torch.cuda.mem_get_info()[1]}%")
+            print(i_logits)
 
     if FAST_DBG_TEST:
         break
@@ -379,10 +380,41 @@ print(f'val_accuracy = {val_accuracy/ len(val_dataloader): .3f}')
 
 print("-- DONE --")
 
-# batch_size = 12
-# progress 48.3%
-# training_loss 0.744
-# train_accuracy = 0.505
-# GPU mem free: 48%
-    
-    
+# stare i do bani:
+#   batch_size = 12
+#   progress 48.3%
+#   training_loss 0.744
+#   train_accuracy = 0.505
+#   GPU mem free: 48%
+#   -- --
+#   val_loss = 0.693
+#   val_accuracy = 0.494
+#   -- DONE --
+#
+# nowe, działa!
+#   ----- epoch: 0
+#   ...
+#   progress 99.7%
+#   curr_training_loss 0.108
+#   curr_train_accuracy = 0.917
+#   total_training_loss 0.224
+#   total_train_accuracy = 0.906
+#   ...
+#   ----- epoch: 1
+#   ...
+#   progress 99.7%
+#   curr_training_loss 0.003
+#   curr_train_accuracy = 1.000
+#   total_training_loss 0.089
+#   total_train_accuracy = 0.970
+#   --
+#   -- --
+#   val_loss =  0.165
+#   val_accuracy =  0.944
+#   -- DONE --
+# %%
+if False:
+    model.save_pretrained("bert-imdb-poc")
+    tokenizer.save_pretrained("bert-imdb-poc")
+    %pwd
+# %%
