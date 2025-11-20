@@ -176,23 +176,6 @@ token_ids.shape
 # val jak validation
 val_size = 0.1
 
-# aaa shuffle=False żeby maski i tokeny i etykiety sobie odpowiadały
-
-# Split the token IDs
-train_ids, val_ids = train_test_split(
-                        token_ids,
-                        test_size=val_size,
-                        shuffle=False)
-train_ids.shape
-val_ids.shape 
-
-
-# Split the attention masks
-train_masks, val_masks = train_test_split(
-                            attention_masks,
-                            test_size=val_size,
-                            shuffle=False)
-
 # Split the labels
 labels = torch.tensor(df['sentiment_encoded'].values)
 labels.shape
@@ -200,10 +183,14 @@ labels.shape
 if FAST_DBG_TEST:
     labels = labels.narrow(0, 0, token_ids.shape[0]) 
 
-train_labels, val_labels = train_test_split(
-                                labels,
-                                test_size=val_size,
-                                shuffle=False)
+# wspólny podział danych
+train_ids, val_ids, train_masks, val_masks, train_labels, val_labels = train_test_split(
+    token_ids, attention_masks, labels,
+    test_size=0.1,
+    # random_state=42,
+    shuffle=True,            # teraz może być True
+    stratify=labels.numpy()  # zachowuje balans klas
+)
 
 # Create the DataLoaders
 train_data = TensorDataset(train_ids, train_masks, train_labels)
