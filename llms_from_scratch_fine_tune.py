@@ -228,16 +228,17 @@ model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_l
 EPOCHS = 2
 
 # Optimizer
-optimizer = AdamW(model.parameters())
+optimizer = AdamW(model.parameters(), lr = 2e-5)
 
 # Loss function
 loss_function = nn.CrossEntropyLoss()
 
 num_training_steps = EPOCHS * len(train_dataloader)
+num_warmup_steps = int(0.1 * num_training_steps)
 
 scheduler = get_linear_schedule_with_warmup(
     optimizer,
-    num_warmup_steps=0,
+    num_warmup_steps=num_warmup_steps,
     num_training_steps=num_training_steps)
 
 
