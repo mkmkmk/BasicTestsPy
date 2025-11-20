@@ -201,16 +201,29 @@ val_dataloader = DataLoader(val_data, batch_size = batch_size)
 # %%
 
 # Check if GPU is available for faster training time
-if torch.cuda.is_available():
+if True and torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.cuda.empty_cache()
 else:
     device = torch.device('cpu')
 
+gc.collect()
+
 # device = torch.device('cpu')
-    
+if False:
+    os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+    from transformers import TRANSFORMERS_CACHE
+    print(f"TRANSFORMERS_CACHE={TRANSFORMERS_CACHE}")
+
+
 model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2).to(device)
 # model = DistilBertModel.from_pretrained('distilbert-base-uncased').to(device)
+
+# git clone https://huggingface.co/google-bert/bert-base-uncased
+# local_dir = "/home/mkrej/dysk2T/NowyG/SourceCodeZNetu/Huggingface/bert-base-uncased"
+# model = BertForSequenceClassification.from_pretrained(local_dir, num_labels=2).to(device)
+
+# %%
 
 EPOCHS = 2
 
