@@ -8,6 +8,7 @@ import shutil
 from datetime import datetime
 import sys
 import re
+import csv
 
 # Konfiguracja ścieżek (do dostosowania)
 REPO1_PATH = "/home/mkrej/dyskE/MojePrg/SymuLBNP/SymuLBNP.git"
@@ -18,6 +19,7 @@ SVN_REPO = "/home/mkrej/dyskE/MojePrg/SymuLBNP/repo-svn/svn_target"
 SVN_WORKING_COPY = "/home/mkrej/dyskE/MojePrg/SymuLBNP/repo-svn/svn_working"
 SUBDIR1 = "SymuLBNP.git"
 SUBDIR2 = "SymuLBNP-Frontend"
+CSV_OUTPUT = "/home/mkrej/dyskE/MojePrg/SymuLBNP/repo-svn/git_to_svn_mapping.csv"
 
 # Katalogi do pominięcia podczas kopiowania
 SKIP_DIRS_REPO1 = ['.git', 'node_modules', '__pycache__', '.vscode', 'build', 'dist', 'bin' , 'obj', ".vscode", 'AvaDbgDbViewer', 'Ava', 'MultiChartLib', 'SigChartsLib', 'Win', 'Legacy', 'Periph', 'AvaSymuAllDevDbgGui', 'AvaSymuDbgGui', 'AvaPhysioTestGui']
@@ -260,8 +262,26 @@ def svn_commit_with_date(message, date_iso, author, working_copy_path):
             run_command(['svn', 'propset', '--revprop', f'-r{revision}', 
                         'svn:author', author, svn_url])
 
+            return revision
+
     except Exception as e:
         print(f"   Ostrzeżenie: Błąd podczas commitowania: {e}")
+
+    return None
+
+
+def write_csv_mapping(csv_path, mapping_data):
+    """Zapisuje mapowanie Git SHA -> SVN revision do pliku CSV"""
+    try:
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(['Git SHA', 'SVN Revision', 'Repository', 'Comment'])
+            for row in mapping_data:
+                writer.writerow(row)
+        print(f"\n   Zapisano mapowanie do pliku: {csv_path}")
+    except Exception as e:
+        print(f"\n   Błąd zapisu pliku CSV: {e}")
+
 
 def main():
     os.environ['LC_ALL'] = 'C.utf8'
@@ -340,7 +360,8 @@ def main():
     
     print("5. Przetwarzam commity...")
     successful_commits = 0
-    
+    csv_mapping = []
+
     for i, (timestamp, sha, comment, repo_path, subdir, date_iso, author, skip_dirs) in enumerate(all_commits, 1):
         print(f"   [{i}/{len(all_commits)}] {sha[:8]} by {author} - {comment[:50]}...")
         
@@ -350,13 +371,21 @@ def main():
             checkout_commit(repo_path, sha, target_dir, skip_dirs)
             
             # Commit do SVN z autorem
-            svn_commit_with_date(comment, date_iso, author, SVN_WORKING_COPY)
+            svn_revision = svn_commit_with_date(comment, date_iso, author, SVN_WORKING_COPY)
+
+            if svn_revision:
+                repo_name = "Repo1" if repo_path == REPO1_PATH else "Repo2"
+                csv_mapping.append([sha, svn_revision, repo_name, comment])
+                successful_commits += 1
+
             successful_commits += 1
             
         except Exception as e:
             print(f"   Błąd przetwarzania commita {sha}: {e}")
             continue
-    
+
+    write_csv_mapping(CSV_OUTPUT, csv_mapping)
+
     print("6. Gotowe!")
     print(f"   Pomyślnie przetworzono: {successful_commits}/{len(all_commits)} commitów")
     print(f"   SVN repo: {SVN_REPO}")
