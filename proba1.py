@@ -69,6 +69,7 @@ np.fft.fft(np.exp(2j*np.pi*np.arange(8) / 8))
 
 #%%
 x = np.arange(5)
+x.shape
 np.fft.fft(x)
 
 #%%
@@ -147,13 +148,29 @@ def deco(func_to_decorate):
         
     return innerDeco
 
+
+def block(func_to_decorate):
+
+    def inner(*args):
+        print("--blocked")
+        pass
+    return inner
+
+
 @deco
 def print_args(*args):
     for arg in args:
         print(arg)
  
+print_args("ala", "ma", "kota")
+
+@block
+def print_args(*args):
+    for arg in args:
+        print(arg)
 
 print_args("ala", "ma", "kota") 
+
         
 #%%
 
@@ -173,6 +190,11 @@ print(s.ala, s.ma, s.kota)
 
 
 #%%
+[x*x for x in range(10) if x%2]
+en = (x*x for x in range(10) if x%2)
+print(next(en))
+for el in en:
+    print(el)
 
 
 #%%
