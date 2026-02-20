@@ -275,7 +275,7 @@ def write_csv_mapping(csv_path, mapping_data):
     try:
         with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(['Git SHA', 'SVN Revision', 'Repository', 'Comment'])
+            writer.writerow(['Git SHA', 'SVN Revision', 'Repository', 'date', 'author', 'Comment'])
             for row in mapping_data:
                 writer.writerow(row)
         print(f"\n   Zapisano mapowanie do pliku: {csv_path}")
@@ -375,7 +375,7 @@ def main():
 
             if svn_revision:
                 repo_name = "Repo1" if repo_path == REPO1_PATH else "Repo2"
-                csv_mapping.append([sha, svn_revision, repo_name, comment])
+                csv_mapping.append([sha, svn_revision, repo_name, date_iso, author, comment])
                 successful_commits += 1
 
             successful_commits += 1
