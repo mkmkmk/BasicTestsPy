@@ -38,19 +38,6 @@ def extract_images_from_docx(docx_path, output_dir):
     
     return images
 
-def get_paragraph_style_off01(paragraph):
-    """Określa styl paragrafu (nagłówek, lista, itp.)."""
-    if paragraph.style.name.startswith('Heading'):
-        level = paragraph.style.name.replace('Heading ', '')
-        try:
-            return 'heading', int(level)
-        except:
-            return 'normal', 0
-    elif paragraph.style.name.startswith('List'):
-        return 'list', 0
-    else:
-        return 'normal', 0
-
 
 def get_paragraph_style(paragraph):
     """Określa styl paragrafu (nagłówek, lista, itp.)."""
@@ -68,22 +55,6 @@ def get_paragraph_style(paragraph):
         return 'normal', 0
 
 
-def format_text_off(run):
-    """Formatuje tekst zgodnie z jego stylami (bold, italic, itp.)."""
-    # text = run.text.strip()
-    text = run.text
-
-    if run.bold and run.italic:
-        return f"***{text}***"
-    elif run.bold:
-        return f"**{text}**"
-    elif run.italic:
-        return f"*{text}*"
-    elif run.underline:
-        return f"<u>{text}</u>"
-    else:
-        return run.text  # bez strip()
-    
 def format_text(run):
     text = run.text
     
