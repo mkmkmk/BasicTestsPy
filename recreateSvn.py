@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+skrypt w Python do przetworzenia dwóch repo git na jedno svn z liniową historią
+skrypt odczuje listę sha commitów i komentarzy do commitów z plików tekstowych (z dwóch plików),
+sortuje źródłowe commity z obu repo wg ich czasów i odtwarza stan working
+copy wg tych commitów w dwóch podkatalogach i tworzy commity svn z datami jak
+oryginalne commity i komentarzami z plików wejściowych
+ścieżki do plików są hardcodowane podobnie jak nazwy podkatalogów i ścieżki do źródłowych repo
+(ścieżki do katalogów na dysku)
++ w wynikowym .csv drukują się też linie z tagami wersji
+
+"""
+
 import os
 import subprocess
 import tempfile
@@ -20,6 +32,8 @@ SVN_WORKING_COPY = "/home/mkrej/dyskE/MojePrg/SymuLBNP/repo-svn/svn_working"
 SUBDIR1 = "SymuLBNP.git"
 SUBDIR2 = "SymuLBNP-Frontend"
 CSV_OUTPUT = "/home/mkrej/dyskE/MojePrg/SymuLBNP/repo-svn/git_to_svn_mapping.csv"
+TAG_PREFIX = "v"
+
 
 # Katalogi do pominięcia podczas kopiowania
 SKIP_DIRS_REPO1 = ['.git', 'node_modules', '__pycache__', '.vscode', 'build', 'dist', 'bin' , 'obj', ".vscode", 'AvaDbgDbViewer', 'Ava', 'MultiChartLib', 'SigChartsLib', 'Win', 'Legacy', 'Periph', 'AvaSymuAllDevDbgGui', 'AvaSymuDbgGui', 'AvaPhysioTestGui']
@@ -283,6 +297,21 @@ def write_csv_mapping(csv_path, mapping_data):
         print(f"\n   Błąd zapisu pliku CSV: {e}")
 
 
+def get_tags_for_commit(repo_path, sha):
+    """Zwraca listę tagów wskazujących na dany commit"""
+    try:
+        tags_output = run_command(['git', 'tag', '--points-at', sha], cwd=repo_path)
+        if tags_output:
+            # Filtruj tagi zaczynające się od TAG_PREFIX
+            tags = [tag.strip() for tag in tags_output.split('\n') 
+                   if tag.strip().startswith(TAG_PREFIX)]
+            return tags
+        return []
+    except Exception as e:
+        print(f"\n   Błąd get_tags_for_commit(): {e}")
+        return []
+
+
 def main():
     os.environ['LC_ALL'] = 'C.utf8'
     os.environ['LANG'] = 'C.utf8'
@@ -376,10 +405,17 @@ def main():
             if svn_revision:
                 repo_name = "Repo1" if repo_path == REPO1_PATH else "Repo2"
                 csv_mapping.append([sha, svn_revision, repo_name, date_iso, author, comment])
+
+                # Sprawdź czy commit ma tagi
+                tags = get_tags_for_commit(repo_path, sha)
+                for tag in tags:
+                    # Dodaj linię z tagiem (bez 'v' jeśli chcesz)
+                    tag_display = tag[1:] if tag.startswith('v') else tag
+                    csv_mapping.append([f"--- {tag_display}", "", "", "", "", ""])
+
                 successful_commits += 1
 
-            successful_commits += 1
-            
+
         except Exception as e:
             print(f"   Błąd przetwarzania commita {sha}: {e}")
             continue
