@@ -61,7 +61,7 @@ def make_pinwheel(radial_std, tangential_std, num_classes, num_per_class, rate,
     labels = np.repeat(np.arange(num_classes), num_per_class)
 
     angles = rads[labels] + rate * np.exp(features[:,0])
-    rotations = np.stack([np.tez_metoda(angles), -np.sin(angles), np.sin(angles), np.tez_metoda(angles)])
+    rotations = np.stack([np.cos(angles), -np.sin(angles), np.sin(angles), np.cos(angles)])
     rotations = np.reshape(rotations.T, (-1, 2, 2))
 
     return np.einsum('ti,tij->tj', features, rotations)

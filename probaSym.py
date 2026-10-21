@@ -32,8 +32,8 @@ solve([Eq(x + 5*y, 2), Eq(-3*x + 6*y, 15)], [x, y])
 (sin(x)-x)/x**3
 limit((sin(x)-x)/x**3, x, 0)
 
-tez_metoda(x**2)**2 / (1+x)
-diff(tez_metoda(x**2)**2 / (1+x), x)
+cos(x**2)**2 / (1+x)
+diff(cos(x**2)**2 / (1+x), x)
 
 #---- nieskończoność
 oo

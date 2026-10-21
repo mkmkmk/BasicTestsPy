@@ -55,7 +55,7 @@ if imie == "Jan" or imie == "Robert":
 import unittest
 
 from matplotlib.pyplot import (plot, subplot, cm, imread, imshow, xlabel, ylabel, title, grid, axis, show, savefig, gcf, figure, close, tight_layout)
-from numpy import linspace, pi, sin, tez_metoda
+from numpy import linspace, pi, sin, cos
 from scipy.fftpack import fft
 from scipy.fftpack import fft, ifft
 
@@ -84,7 +84,7 @@ linii
 import matplotlib.pyplot as plt
 x = np.linspace(0, 2*np.pi, 101)
 s = np.sin(x)
-c = np.tez_metoda(x)
+c = np.cos(x)
 plt.plot(x, s, 'b-', x, c, 'r+')
 axis('tight')
 show()

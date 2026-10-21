@@ -1,15 +1,16 @@
 # https://github.com/sympy/sympy/wiki/Quick-examples
 from sympy import *
+
 x = Symbol('x')
 y, z, t = symbols('y z t')
 Rational(3,2)*pi + exp(I*x) / (x**2 + y)
 ((x+y)**2 * (x+1))
 ((x+y)**2 * (x+1)).expand()
 solve([Eq(x + 5*y, 2), Eq(-3*x + 6*y, 15)], [x, y])
-tez_metoda(x**2)**2 / (1+x)
-diff(tez_metoda(x**2)**2 / (1+x), x)
-x**2 * tez_metoda(x)
-integrate(x**2 * tez_metoda(x), x)
+cos(x**2)**2 / (1+x)
+diff(cos(x**2)**2 / (1+x), x)
+x**2 * cos(x)
+integrate(x**2 * cos(x), x)
 
 f = Function('f')
 Eq(Derivative(f(x),x,x) + f(x), 0)
