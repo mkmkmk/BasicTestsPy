@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Audyt bezpieczeństwa (tylko odczyty): keyloggery, podsłuch, obce logowania, backdoory.
-# Użycie: ./sec-audit.sh [--clam]     (--clam dodatkowo skanuje ~ przez clamscan)
+# Użycie: ./sec-audit.sh
 # Uruchom we własnym terminalu - sudo zapyta o hasło tam.
 
 R=$'\e[31m'; Y=$'\e[33m'; G=$'\e[32m'; B=$'\e[1m'; N=$'\e[0m'
@@ -113,26 +113,25 @@ else
   [ -n "$RK" ] && { warn "rkhunter zgłasza (po aktualizacjach systemu to często fałszywy alarm):"; echo "$RK"; } || ok "rkhunter nic nie zgłasza"
 fi
 
-if [ "${1:-}" = "--clam" ]; then
-  hdr "14. ClamAV ~"
-  if ! command -v clamscan >/dev/null; then
-    warn "Brak clamscan (sudo apt install clamav)"
-  else
-    DB=/var/lib/clamav/daily.cvd; [ -f /var/lib/clamav/daily.cld ] && DB=/var/lib/clamav/daily.cld
-    AGE=$(( ( $(date +%s) - $(stat -c %Y "$DB" 2>/dev/null || echo 0) ) / 86400 ))
-    if [ "$AGE" -gt 7 ]; then
-      warn "Baza ClamAV ma $AGE dni - próbuję zaktualizować (freshclam)"
-      [ -n "$SUDO" ] && $SUDO freshclam --quiet 2>&1 | sed 's/^/    /' || info "bez sudo nie zaktualizuję: sudo freshclam"
-    fi
-    # Wybrane miejsca (jak w szybkim skanie), pomijane duże/bezpieczne katalogi - tylko istniejące
-    CL_TARGETS=(); for d in "$HOME" /tmp /var/tmp /usr/local/bin /usr/bin /etc/cron.d /etc/cron.daily; do [ -d "$d" ] && CL_TARGETS+=("$d"); done
-    CL_EXCL=(); for d in .cache .mozilla .local/share/Trash .wine .p2 .gradle .m2 .npm snap; do CL_EXCL+=(--exclude-dir="^$HOME/$d$"); done
-    info "Skanuję: ${CL_TARGETS[*]} (pliki do 30 MB; może potrwać kilka minut)..."
-    CL=$(clamscan -r "${CL_TARGETS[@]}" "${CL_EXCL[@]}" --max-filesize=30M --max-scansize=30M 2>&1)
-    echo "$CL" | grep -E "FOUND|Infected files|Scanned files|^Time" | sed 's/^/    /'
-    echo "$CL" | grep -q "FOUND" && warn "ClamAV znalazł zagrożenia (linie FOUND wyżej)" || ok "ClamAV: nic nie znaleziono"
+hdr "14. ClamAV"
+if ! command -v clamscan >/dev/null; then
+  warn "Brak clamscan (sudo apt install clamav)"
+else
+  DB=/var/lib/clamav/daily.cvd; [ -f /var/lib/clamav/daily.cld ] && DB=/var/lib/clamav/daily.cld
+  AGE=$(( ( $(date +%s) - $(stat -c %Y "$DB" 2>/dev/null || echo 0) ) / 86400 ))
+  if [ "$AGE" -gt 7 ]; then
+    warn "Baza ClamAV ma $AGE dni - próbuję zaktualizować (freshclam)"
+    [ -n "$SUDO" ] && $SUDO freshclam --quiet 2>&1 | sed 's/^/    /' || info "bez sudo nie zaktualizuję: sudo freshclam"
   fi
+  # Wybrane miejsca (jak w szybkim skanie), pomijane duże/bezpieczne katalogi - tylko istniejące
+  CL_TARGETS=(); for d in "$HOME" /tmp /var/tmp /usr/local/bin /usr/bin /etc/cron.d /etc/cron.daily; do [ -d "$d" ] && CL_TARGETS+=("$d"); done
+  CL_EXCL=(); for d in .cache .mozilla .local/share/Trash .wine .p2 .gradle .m2 .npm snap; do CL_EXCL+=(--exclude-dir="^$HOME/$d$"); done
+  info "Skanuję: ${CL_TARGETS[*]} (pliki do 30 MB; może potrwać kilka minut)..."
+  CL=$(clamscan -r "${CL_TARGETS[@]}" "${CL_EXCL[@]}" --max-filesize=30M --max-scansize=30M 2>&1)
+  echo "$CL" | grep -E "FOUND|Infected files|Scanned files|^Time" | sed 's/^/    /'
+  echo "$CL" | grep -q "FOUND" && warn "ClamAV znalazł zagrożenia (linie FOUND wyżej)" || ok "ClamAV: nic nie znaleziono"
 fi
+
 
 echo; echo "${B}Podsumowanie:${N} ostrzeżeń: $WARNS"
 [ "$WARNS" -eq 0 ] && echo "${G}Nic podejrzanego.${N}" || echo "${Y}Przejrzyj linie [!]. Wiele to fałszywe alarmy - sprawdź każdą osobno.${N}"
